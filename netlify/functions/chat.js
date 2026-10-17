@@ -1,3 +1,4 @@
+
 exports.handler = async (ev) => {
   const ok = (text) => ({ statusCode: 200, headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text }) });
   if (ev.httpMethod !== 'POST') return { statusCode: 405, body: '' };
@@ -6,7 +7,7 @@ exports.handler = async (ev) => {
     const m = ((JSON.parse(ev.body || '{}')).messages || []).slice(-12);
     while (m.length && m[0].role !== 'user') m.shift();
     const contents = m.map(x => ({ role: x.role === 'assistant' ? 'model' : 'user', parts: [{ text: x.content }] }));
-    const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent', {
+    const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent', {
       method: 'POST',
       headers: { 'content-type': 'application/json', 'x-goog-api-key': process.env.GEMINI_API_KEY },
       body: JSON.stringify({ contents, generationConfig: { maxOutputTokens: 300 } })
