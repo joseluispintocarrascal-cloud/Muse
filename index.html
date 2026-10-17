@@ -41,20 +41,25 @@ input[type=range]{width:100%}
 @media (prefers-reduced-motion:reduce){#sheet{transition:none}}
 </style></head><body>
 <div id="stage"><canvas id="cv"></canvas><div id="toast"></div></div>
-<div id="dock"><button class="fab" id="mic">🎤 Hablar</button></div>
+<div id="dock"><button class="fab" id="acc">🎩 Accesorios</button><button class="fab" id="mic">🎤 Hablar</button></div><div id="sheet"><div class="shtop"><b>🎩 Accesorios</b><button id="sx">✕</button></div><div id="sbody"></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-var S={name:'Muse',fur:'#f0b8a4',outfit:'#6f8cff',bg:'#b8a6ef',ears:'bear',eyes:'shine',style:'hoodie',hat:'none',glasses:false,pitch:1.3,speak:true,pers:'tierno, curioso y un poco bromista'};
+var S={name:'Muse',fur:'#f0b8a4',outfit:'#6f8cff',bg:'#b8a6ef',ears:'bear',eyes:'shine',style:'hoodie',hat:'none',glasses:false,shoes:'none',earring:false,blush:true,eyeCol:'#0a0710',pitch:1.3,speak:true,pers:'claro, directo e informativo; responde de forma seria y precisa, sin frases cariñosas, apodos ni bromas'};
 try{var sv=JSON.parse(localStorage.getItem('muse-avatar-v1'));if(sv)Object.assign(S,sv)}catch(e){}
-S.hat='none';S.glasses=false;function save(){try{localStorage.setItem('muse-avatar-v1',JSON.stringify(S))}catch(e){}}
-var O=[['hat','Gorros y sombreros',[['none','Ninguno'],['cap','Gorra'],['wizard','Mago'],['crown','Corona']]],['glasses','Anteojos',[[false,'Sin anteojos'],[true,'Con anteojos']]]];
+S.pers='claro, directo e informativo; responde de forma seria y precisa, sin frases cariñosas, apodos ni bromas';function save(){try{localStorage.setItem('muse-avatar-v1',JSON.stringify(S))}catch(e){}}
+var O=[['style','Ropa',[['none','Ninguna'],['hoodie','Sudadera'],['jacket','Camisa'],['cape','Capa']]],
+['shoes','Zapatos',[['none','Ninguno'],['sneak','Tenis'],['boot','Botas']]],
+['hat','Gorros y sombreros',[['none','Ninguno'],['cap','Gorra'],['wizard','Mago'],['crown','Corona']]],
+['glasses','Anteojos',[[false,'Sin anteojos'],[true,'Con anteojos']]],
+['earring','Aretes',[[false,'Sin aretes'],[true,'Con aretes']]],
+['blush','Rubor',[[true,'Con rubor'],[false,'Sin rubor']]]];
 var FURS=['#f0b8a4','#f6e3c4','#c9b8ff','#9fd8c8','#8a6a56','#f5f5f5'];
 var M={neutral:{c:.4,b:0,by:0,e:1,o:0,gx:0,gy:0,er:0,bl:.35},happy:{c:1,b:.12,by:.03,e:1,o:.05,gx:0,gy:0,er:.15,bl:.7},sad:{c:-.8,b:.4,by:-.01,e:.95,o:0,gx:0,gy:-.2,er:-.5,bl:.15},surprised:{c:0,b:0,by:.1,e:1.25,o:.55,gx:0,gy:0,er:.4,bl:.3},thinking:{c:.05,b:.15,by:.06,e:1,o:0,gx:.5,gy:.45,er:-.1,bl:.3}};
 var VIS={a:[.85,1],e:[.5,1.2],i:[.3,1.35],o:[.7,.7],u:[.45,.55]};
 var $=function(i){return document.getElementById(i)};
 var mood='neutral',moodT=0,cur=Object.assign({},M.neutral),speaking=false,vis=[.4,1],pulse=0,open=0,wid=1,waveT=2.4,jump=0,ptr={x:0,y:0},gz={x:0,y:0};
 var busy=false,hist=[],sample=null,voiceMode=false,listening=false,rec=null,voices=[],chatOpen=false,tab='c';
-var R,scene,cam,av,head,body,armR,earG,eyes,brows,mouthC,mouthO,floor,keyL,camY=.25,camZ=11.5,baseZ=11.5,tapT=[],noiseT;
+var R,scene,cam,av,head,body,armR,earG,eyes,brows,mouthC,mouthO,floor,keyL,camY=.25,camZ=13.5,baseZ=13.5,tapT=[],noiseT;
 function std(c,r,m){return new THREE.MeshStandardMaterial({color:c,roughness:r==null?.6:r,metalness:m||0})}
 function mesh(g,m,x,y,z,sh){var o=new THREE.Mesh(g,m);o.position.set(x||0,y||0,z||0);o.castShadow=sh!==false;return o}
 function sp(g,x,y,z,r,m){var o=mesh(SG,m||white0,x,y,z,false);o.scale.setScalar(r);g.add(o)}
@@ -91,7 +96,7 @@ var n=performance.now();tapT=tapT.filter(function(x){return n-x<900});tapT.push(
 jump=.6;waveT=1.4;setMood('surprised',1200)});
 return true}
 function setBg(){var c=new THREE.Color(S.bg);scene.background=c;scene.fog=new THREE.Fog(c.getHex(),9,22);floor.material.color=c.clone().multiplyScalar(.8)}
-function resize(){var w=innerWidth,h=innerHeight;R.setSize(w,h,false);cam.aspect=w/h;baseZ=11.5*Math.max(1,.62/(w/h));cam.updateProjectionMatrix()}
+function resize(){var w=innerWidth,h=innerHeight;R.setSize(w,h,false);cam.aspect=w/h;baseZ=13.5*Math.max(1,.62/(w/h));cam.updateProjectionMatrix()}
 function build(){
 if(av){scene.remove(av);av.traverse(function(o){if(o.material)o.material.dispose()})}
 av=new THREE.Group();
@@ -103,7 +108,7 @@ if(S.style!='none'){var cl=mesh(new THREE.SphereGeometry(1,40,24,0,Math.PI*2,Mat
 if(S.style=='hoodie'){var h=mesh(new THREE.TorusGeometry(.4,.14,14,28),outM,0,.62,-.04);h.rotation.x=Math.PI/2;h.scale.set(1.1,1,1);body.add(h);var pk=mesh(SG,std(oc.clone().multiplyScalar(.85),.9),0,-.4,.66);pk.scale.set(.38,.17,.14);body.add(pk)}
 if(S.style=='jacket'){body.add(mesh(new THREE.BoxGeometry(.06,.9,.03),white,0,-.18,.78));body.add(mesh(new THREE.BoxGeometry(.5,.07,.05),std(0xffd166,.4),0,.5,.7))}
 if(S.style=='cape'){var cp=mesh(new THREE.ConeGeometry(.95,1.7,32,1,true),std(oc.clone().multiplyScalar(.8),.85),0,-.05,-.42);cp.material.side=THREE.DoubleSide;cp.rotation.x=-.12;av.add(cp);cp.position.y=-.35}}
-[-1,1].forEach(function(s){var f=furBall(S.fur,.24,.15,.3,.05,6);f.position.set(s*.34,-.88,.28);body.add(f)});
+[-1,1].forEach(function(s){var f=furBall(S.fur,.24,.15,.3,.05,6);f.position.set(s*.34,-.88,.28);body.add(f);if(S.shoes=='sneak'){var sh=mesh(SG,std(0xf5f5f5,.5),s*.34,-.94,.34);sh.scale.set(.28,.17,.4);body.add(sh);var so=mesh(SG,std(0xe63946,.6),s*.34,-1.06,.34);so.scale.set(.29,.05,.41);body.add(so)}if(S.shoes=='boot'){var bt=mesh(SG,std(0x6b4423,.7),s*.34,-.9,.32);bt.scale.set(.28,.26,.38);body.add(bt);var bs=mesh(SG,std(0x2b1a0e,.8),s*.34,-1.07,.34);bs.scale.set(.29,.05,.41);body.add(bs)}});
 av.add(body);
 /* brazos */
 function arm(s){var g=new THREE.Group();g.position.set(s*.74,-.2,.02);var a=furBall(S.fur,.2,.4,.2,.06,8);a.position.y=-.32;g.add(a);if(S.style!='none'&&S.style!='cape'){var sl=mesh(SG,outM,0,-.17,0);sl.scale.set(.215,.26,.215);g.add(sl)}g.rotation.z=s*.35;return g}
@@ -115,12 +120,12 @@ var mz=mesh(SG,skin,0,-.17,.5);mz.scale.set(.34,.26,.27);head.add(mz);
 var nose=mesh(SG,std(0x3b2430,.2),0,-.07,.77);nose.scale.set(.06,.04,.04);head.add(nose);
 eyes=[];[-1,1].forEach(function(s){var e=new THREE.Group();e.userData={bx:s*.3,by:.1};e.position.set(s*.3,.1,.69);
 if(S.eyes=='happy'){e.add(mesh(new THREE.TorusGeometry(.1,.03,10,18,Math.PI),dark))}
-else{var r=S.eyes=='shine'?.13:.1,b=mesh(SG,std(0x0a0710,.05),0,0,0);b.scale.set(r,r*1.1,r*.6);e.add(b);
+else{var r=S.eyes=='shine'?.13:.1,b=mesh(SG,std(new THREE.Color(S.eyeCol),.05),0,0,0);b.scale.set(r,r*1.1,r*.6);e.add(b);
 if(S.eyes=='shine'){sp(e,.045,.05,.07,.035);sp(e,-.04,-.045,.07,.018)}
 else sp(e,.03,.03,.06,.022)}
 head.add(e);eyes.push(e)});
 brows=[];[-1,1].forEach(function(s){var b=mesh(new THREE.BoxGeometry(.17,.04,.03),std(fc.clone().multiplyScalar(.4),.8),s*.3,.33,.7,false);b.userData={s:s,by:.33};head.add(b);brows.push(b)});
-[-1,1].forEach(function(s){var ch=mesh(SG,new THREE.MeshBasicMaterial({color:0xff7a90,transparent:true,opacity:.4}),s*.5,-.1,.5,false);ch.scale.set(.1,.06,.03);ch.userData.ch=1;head.add(ch)});
+if(S.blush)[-1,1].forEach(function(s){var ch=mesh(SG,new THREE.MeshBasicMaterial({color:0xff7a90,transparent:true,opacity:.4}),s*.5,-.1,.5,false);ch.scale.set(.1,.06,.03);ch.userData.ch=1;head.add(ch)});
 mouthC=mesh(new THREE.TorusGeometry(.1,.022,8,20,Math.PI),dark,0,-.14,.755,false);head.add(mouthC);
 mouthO=new THREE.Group();mouthO.position.set(0,-.2,.745);var mo=mesh(SG,std(0x4a0d1c,.6),0,0,0,false);mo.scale.set(.11,.11,.04);mouthO.add(mo);var tg=mesh(SG,pink,0,-.05,.015,false);tg.scale.set(.07,.04,.03);mouthO.add(tg);head.add(mouthO);
 /* orejas */
@@ -133,7 +138,7 @@ if(S.glasses){var gm=std(0x14141c,.3,.4);[-1,1].forEach(function(s){head.add(mes
 if(S.hat=='cap'){var dm=mesh(new THREE.SphereGeometry(.8,32,16,0,Math.PI*2,0,Math.PI/2),std(0x2a9d8f,.6),0,.32,0);dm.scale.set(1.08,.8,.95);dm.rotation.x=-.12;head.add(dm);var vs=mesh(new THREE.CylinderGeometry(.58,.58,.05,28,1,false,-Math.PI/2,Math.PI),std(0x1f7a6f,.6),0,.38,.68);vs.rotation.x=.1;head.add(vs)}
 if(S.hat=='wizard'){var rd=std(0x5b2a86,.7);head.add(mesh(new THREE.CylinderGeometry(.95,.95,.05,36),rd,0,.52,0));var cn=mesh(new THREE.ConeGeometry(.58,1.1,30),rd,0,1.05,0);cn.rotation.z=.15;head.add(cn);var bd=mesh(new THREE.TorusGeometry(.57,.045,8,30),std(0xffd166,.3,.7),0,.6,0);bd.rotation.x=Math.PI/2;head.add(bd)}
 if(S.hat=='crown'){var gold=std(0xffd166,.25,.85);var cy=mesh(new THREE.CylinderGeometry(.36,.32,.2,22,1,true),gold,0,.8,0);cy.material.side=THREE.DoubleSide;head.add(cy);for(var k=0;k<5;k++){var a=k/5*Math.PI*2,px=Math.sin(a)*.34,pz=Math.cos(a)*.34;head.add(mesh(new THREE.ConeGeometry(.07,.22,6),gold,px,.99,pz));sp(head,px,1.12,pz,.04,std(0xe63946,.2))}}
-av.add(head);scene.add(av)}
+if(S.earring){var gd=std(0xffd166,.25,.85);[-1,1].forEach(function(s){sp(head,s*.88,-.12,.08,.06,gd);sp(head,s*.88,-.24,.08,.04,gd)})}av.add(head);scene.add(av)}
 function setMood(m,ms){mood=m;moodT=performance.now()+(ms||6000);if(m=='happy')waveT=2.2;if(m=='surprised')jump=1}
 var last=performance.now()/1000,nextBl=2,blS=-9;
 function tick(){requestAnimationFrame(tick);if(document.hidden)return;
@@ -197,7 +202,7 @@ function clean(t){return t.replace(/^\s*\[[^\]]*\]?\s*/,'')}
 async function send(txt){
 var t=(txt||'').trim();if(!t||busy)return;busy=true;
 if(SS)SS.cancel();hist.push({role:'user',content:t});hint('Tú: '+t,4000);setMood('thinking',60000);chips();
-var inst='Eres '+(S.name||'un avatar')+', un avatar peludo y tierno de IA. Personalidad: '+S.pers+'. Responde siempre en español, máximo 2 frases cortas, en primera persona, como en una conversación hablada. Empieza SIEMPRE con una etiqueta de ánimo entre corchetes: [feliz], [triste], [sorprendido], [pensativo] o [neutral].';
+var inst='Eres '+(S.name||'un avatar')+', un asistente de IA con apariencia de avatar 3D. Personalidad: '+S.pers+'. Responde siempre en español, responde primero con la respuesta concreta, máximo 2 frases cortas, en primera persona, como en una conversación hablada. Empieza SIEMPRE con una etiqueta de ánimo entre corchetes: [feliz], [triste], [sorprendido], [pensativo] o [neutral].';
 var msgs=hist.slice(-10).map(function(m){return{role:m.role,content:m.content}});
 msgs[msgs.length-1]={role:'user',content:inst+'\n\nMensaje del usuario: '+t};
 var out='',tag='neutral';
@@ -208,6 +213,19 @@ hist.push({role:'assistant',content:out});
 var mm={feliz:'happy',happy:'happy',triste:'sad',sad:'sad',sorprendido:'surprised',surprised:'surprised',pensativo:'thinking',thinking:'thinking'}[tag]||'neutral';
 setMood(mm,6000);busy=false;hint(out,12000);say(out,function(){if(voiceMode)listen()})}
 (async function(){try{sample=await claude.use('sample')}catch(e){}})();
+
+/* panel de accesorios */
+function panel(){var h='<div class="cols"><div><label>Fondo</label><input type="color" id="cbg" value="'+S.bg+'"></div><div><label>Pelaje</label><input type="color" id="cfur" value="'+S.fur+'"></div><div><label>Ropa</label><input type="color" id="cout" value="'+S.outfit+'"></div></div>';
+O.forEach(function(o){h+='<label>'+o[1]+'</label><div class="chips">'+o[2].map(function(v){return '<button class="chip'+(S[o[0]]===v[0]?' on':'')+'" data-k="'+o[0]+'" data-v="'+v[0]+'">'+v[1]+'</button>'}).join('')+'</div>'});
+h+='<label>Color de ojos</label><input type="color" id="cey" value="'+S.eyeCol+'"><label>Estilo de ojos</label><div class="chips">'+[['shine','Brillantes'],['plain','Simples'],['happy','Felices']].map(function(v){return '<button class="chip'+(S.eyes===v[0]?' on':'')+'" data-k="eyes" data-v="'+v[0]+'">'+v[1]+'</button>'}).join('')+'</div>';
+$('sbody').innerHTML=h;
+$('cbg').oninput=function(e){S.bg=e.target.value;setBg();save()};
+$('cfur').onchange=function(e){S.fur=e.target.value;build();save()};
+$('cey').onchange=function(e){S.eyeCol=e.target.value;build();save()};$('cout').onchange=function(e){S.outfit=e.target.value;build();save()};
+Array.prototype.forEach.call($('sbody').querySelectorAll('.chip'),function(b){b.onclick=function(){var v=b.getAttribute('data-v');if(v==='true')v=true;else if(v==='false')v=false;S[b.getAttribute('data-k')]=v;build();save();panel()}})}
+function togglePanel(on){chatOpen=on;$('sheet').className=on?'open':'';if(on)panel()}
+$('acc').onclick=function(){togglePanel(!chatOpen)};
+$('sx').onclick=function(){togglePanel(false)};
 chips();setInterval(chips,300);
 if(init()){build();tick();setMood('happy',3000);hint('Toca 🎤 Hablar y háblame 💜',6000)}
 else{$('stage').innerHTML='<p style="color:#fff;text-align:center;padding:24px">Tu navegador no soporta WebGL.</p>'}
